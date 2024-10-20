@@ -5,80 +5,107 @@ import numpy as np
 import pyaudio
 import wave
 import keyboard
-import os
-
-# User will decide these parameters through the GUI
-
-SAMPLE_RATE = int(input("Sample Rate: (e.g 44100): "))
+import librosa
 
 
-# Static parameters
+def melspect_silence_error(normalized_audio_data, SAMPLE_RATE):
+    # Process the normalized audio data with librosa
+    mel_spect = librosa.feature.melspectrogram(y=normalized_audio_data, sr=SAMPLE_RATE)
 
-FORMAT = pyaudio.paInt16 # Bit-depth ## paInt8 => 16-bit PCM (Pulse Code Modulation)
-CHANNELS = 1 # mono
-CHUNK = 1024 # Number of samples per each recording loop
-TEMP_REC_FILENAME = "temp_rec_mct.wav"
+    # Convert the mel spectrogram to dB
+    mel_spect_db = librosa.power_to_db(mel_spect, ref=1.0)
 
-p = pyaudio.PyAudio() # Initialize PortAudio
-
-# Starting the audio stream
-
-audio_stream = p.open(format = FORMAT,
-                      channels = CHANNELS,
-                      rate = SAMPLE_RATE,
-                      input = True,
-                      frames_per_buffer = CHUNK)
-
-print("TEST - Recording is starting")
-
-input_audio_frames = [] # Will store the recorded audio data
+    # Find the maximum dB value
+    max_db = np.max(mel_spect_db)
+    max_db = round(max_db, 2)
+    if max_db < 20:
+            print("Silence Error: The recording is too quiet. Please record again.")
+            global silence_error_flag
+            silence_error_flag = True
+            
 
 def stop_recording():
-    print("Stopping the recording...")
-    global recording_flag
-    recording_flag = False  # Terminate the recording
+        global recording_flag
+        recording_flag = False
+        print("Stopping the recording...")
 
-recording_flag = True
+def main():
+    # User will decide these parameters through the GUI
 
-# Stop the recording when pressed enter
+    SAMPLE_RATE = int(input("Sample Rate (e.g 44100): "))
 
-keyboard.on_press_key('enter', lambda _: stop_recording())
+    # Static parameters
 
-# Reading audio data
-while recording_flag:
-    audio_data = audio_stream.read(CHUNK)
-    input_audio_frames.append(audio_data)
+    FORMAT = pyaudio.paInt16 # Bit-depth ## paInt16 => 16-bit PCM (Pulse Code Modulation)
+    CHANNELS = 2 # mono
+    CHUNK = 1024 # Number of samples per each recording loop
+    TEMP_REC_FILENAME = "temp_rec_mct.wav"
 
-# Terminating the audio stream
+    global silence_error_flag
+    silence_error_flag = False
 
-audio_stream.stop_stream()
-audio_stream.close()
-p.terminate()
+    while 1:
+        silence_error_flag = False
+        p = pyaudio.PyAudio() # Initialize PortAudio
 
-# Create and write the audio data into a WAV file
+        # Starting the audio stream
 
-output_file = wave.open(TEMP_REC_FILENAME, "wb")
+        audio_stream = p.open(format = FORMAT,
+                        channels = CHANNELS,
+                        rate = SAMPLE_RATE,
+                        input = True,
+                        frames_per_buffer = CHUNK)
 
-output_file.setnchannels(CHANNELS)
-output_file.setsampwidth(p.get_sample_size(FORMAT))
-output_file.setframerate(SAMPLE_RATE)
+        print("TEST - Recording is starting")
 
-output_file.writeframes(b''.join(input_audio_frames))
+        input_audio_frames = [] # Will store the recorded audio data
 
-output_file.close()
+        global recording_flag
+        recording_flag = True
 
-print(f"TEST - Recording file was saved to {TEMP_REC_FILENAME}")
+        # Stop the recording when pressed enter
 
-with open(TEMP_REC_FILENAME,"rb") as file: #Opens the file in binary format
-    file.seek(44) #First 44 bytes are header, skip them
-    while True: #Starts an infinite loop
-        data = file.read(CHUNK*2) #Reads the data in chunks
+        keyboard.on_press_key('enter', lambda _: stop_recording())
 
-        if not data: #If there is no data, break the loop
-            break
-        audio_data = np.frombuffer(data, dtype=np.int16)#Converts the data to numpy array (16-byte integers)
+        # Reading audio data
+        while recording_flag:
+            audio_data = audio_stream.read(CHUNK)
+            input_audio_frames.append(audio_data)
 
-       
+        # Terminating the audio stream
+
+        audio_stream.stop_stream()
+        audio_stream.close()
+        p.terminate()
+
+        # Create and write the audio data into a WAV file
+
+        output_file = wave.open(TEMP_REC_FILENAME, "wb")
+
+        output_file.setnchannels(CHANNELS)
+        output_file.setsampwidth(p.get_sample_size(FORMAT))
+        output_file.setframerate(SAMPLE_RATE)
+
+        output_file.writeframes(b''.join(input_audio_frames))
+
+        output_file.close()
+
+        print(f"TEST - Recording file was saved to {TEMP_REC_FILENAME}")
+
+        # Convert the recorded data to numpy array
+        audio_data = np.frombuffer(b''.join(input_audio_frames), dtype=np.int16)
+
+        # Normalize the audio data using librosa
+        normalized_audio_data = audio_data.astype(np.float32) / np.max(np.abs(audio_data))
+        # Process the normalized audio data with librosa for the silence error
+        melspect_silence_error(normalized_audio_data, SAMPLE_RATE)
+
+        if (silence_error_flag == True):
+             continue
+        else:
+             break
 
 
+if __name__ == "__main__":
+    main() # Run the main function
 
