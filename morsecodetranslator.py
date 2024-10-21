@@ -18,16 +18,17 @@ def melspect_silence_error(normalized_audio_data, SAMPLE_RATE):
     # Find the maximum dB value
     max_db = np.max(mel_spect_db)
     max_db = round(max_db, 2)
-    if max_db < 20:
-            print("Silence Error: The recording is too quiet. Please record again.")
+    if max_db < 2000:
+            print("Silence Error: The recording is too quiet. Please record again.\n\n")
             global silence_error_flag
             silence_error_flag = True
             
 
 def stop_recording():
         global recording_flag
-        recording_flag = False
-        print("Stopping the recording...")
+        if recording_flag:        
+            print("Stopping the recording...")
+            recording_flag=False
 
 def main():
     # User will decide these parameters through the GUI
@@ -37,7 +38,7 @@ def main():
     # Static parameters
 
     FORMAT = pyaudio.paInt16 # Bit-depth ## paInt16 => 16-bit PCM (Pulse Code Modulation)
-    CHANNELS = 2 # mono
+    CHANNELS = 1 # mono
     CHUNK = 1024 # Number of samples per each recording loop
     TEMP_REC_FILENAME = "temp_rec_mct.wav"
 
