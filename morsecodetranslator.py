@@ -1,12 +1,26 @@
-# audio_input
+# morsecodetranslator.py
 ## only supports recording files for now
-### only supports mono audio (CHANNEL = 1)
+
+# alperersy, yefesaktas
+
 import numpy as np
 import pyaudio
 import wave
 import keyboard
 import librosa
 
+def fetch_mic_info(): 
+    # Fetch info about default input device (mic)
+    p = pyaudio.PyAudio()
+    default_input_device_info = p.get_default_input_device_info()
+
+    # Default sample rate
+    default_sample_rate = default_input_device_info["defaultSampleRate"]
+
+    # Default channel number
+    default_channels = default_input_device_info["maxInputChannels"]
+
+    return default_sample_rate, default_channels
 
 def melspect_silence_error(normalized_audio_data, SAMPLE_RATE):
     # Process the normalized audio data with librosa
@@ -18,7 +32,7 @@ def melspect_silence_error(normalized_audio_data, SAMPLE_RATE):
     # Find the maximum dB value
     max_db = np.max(mel_spect_db)
     max_db = round(max_db, 2)
-    if max_db < 2000:
+    if max_db < 20:
             print("Silence Error: The recording is too quiet. Please record again.\n\n")
             global silence_error_flag
             silence_error_flag = True
@@ -31,14 +45,19 @@ def stop_recording():
             recording_flag=False
 
 def main():
-    # User will decide these parameters through the GUI
+    # Fetch info about default input device (mic)
+    default_sample_rate, default_channels = fetch_mic_info()
 
-    SAMPLE_RATE = int(input("Sample Rate (e.g 44100): "))
+    # TEST
+    print(f"default sample rate: {int(default_sample_rate)}")
+    print(f"default channel number: {default_channels}")
+    # TEST END
 
-    # Static parameters
+    input("Deneme inputu")
 
+    SAMPLE_RATE = int(default_sample_rate)
     FORMAT = pyaudio.paInt16 # Bit-depth ## paInt16 => 16-bit PCM (Pulse Code Modulation)
-    CHANNELS = 1 # mono
+    CHANNELS = default_channels
     CHUNK = 1024 # Number of samples per each recording loop
     TEMP_REC_FILENAME = "temp_rec_mct.wav"
 
