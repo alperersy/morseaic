@@ -8,6 +8,31 @@ import pyaudio
 import wave
 import keyboard
 import librosa
+import time
+import os
+#ASCII ART GUI
+file_name = "ascii_art.txt"
+with open(file_name, "r") as file:
+    content = file.read()
+    print(content)
+startcheckflag = False #flag to start the program
+def start_program(_):
+    global startcheckflag
+    keyboard.write('\b')
+    startcheckflag = True
+    
+def clear_screen():
+    #clears the screen
+    if os.name == 'nt':  # Windows
+        os.system('cls')
+    else:  
+        os.system('clear')
+
+keyboard.on_press_key('1', start_program) #if user presses 1,program starts 
+
+while not startcheckflag:
+    time.sleep(0.1)
+clear_screen()
 
 def fetch_mic_info(): 
     # Fetch info about default input device (mic)
@@ -33,7 +58,9 @@ def melspect_silence_error(normalized_audio_data, SAMPLE_RATE):
     max_db = np.max(mel_spect_db)
     max_db = round(max_db, 2)
     if max_db < 20:
-            print("Silence Error: The recording is too quiet. Please record again.\n\n")
+            print("*******************************************************************")
+            print("Silence Error: The recording is too quiet. Recording has restarted\n")
+            print("*******************************************************************\n\n")
             global silence_error_flag
             silence_error_flag = True
             
@@ -41,7 +68,7 @@ def melspect_silence_error(normalized_audio_data, SAMPLE_RATE):
 def stop_recording():
         global recording_flag
         if recording_flag:        
-            print("Stopping the recording...")
+            print("****** Stopping the recording... ******\n\n")
             recording_flag=False
 
 def main():
@@ -49,11 +76,14 @@ def main():
     default_sample_rate, default_channels = fetch_mic_info()
 
     # TEST
+    print("===================================================================")
     print(f"default sample rate: {int(default_sample_rate)}")
     print(f"default channel number: {default_channels}")
+    print("===================================================================\n\n")
+    
     # TEST END
 
-    input("Deneme inputu")
+    
 
     SAMPLE_RATE = int(default_sample_rate)
     FORMAT = pyaudio.paInt16 # Bit-depth ## paInt16 => 16-bit PCM (Pulse Code Modulation)
@@ -75,9 +105,9 @@ def main():
                         rate = SAMPLE_RATE,
                         input = True,
                         frames_per_buffer = CHUNK)
-
-        print("TEST - Recording is starting")
-
+        print("------------------------------------------------------------------------------")
+        print("--------- Recording has started. Press 'ENTER' to stop the recording ---------\n",end="")
+        print("------------------------------------------------------------------------------\n\n")
         input_audio_frames = [] # Will store the recorded audio data
 
         global recording_flag
@@ -110,7 +140,7 @@ def main():
 
         output_file.close()
 
-        print(f"TEST - Recording file was saved to {TEMP_REC_FILENAME}")
+        print(f"Recording file successfully saved to '{TEMP_REC_FILENAME}'!\n\n")
 
         # Convert the recorded data to numpy array
         audio_data = np.frombuffer(b''.join(input_audio_frames), dtype=np.int16)
