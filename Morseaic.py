@@ -10,28 +10,34 @@ import keyboard
 import librosa
 import time
 import os
-#ASCII ART GUI
+from intMorse import int_morse_table # Include morse code mapping dict
+
+# ASCII ART GUI
 file_name = "ascii_art.txt"
+
 with open(file_name, "r") as file:
     content = file.read()
     print(content)
-startcheckflag = False #flag to start the program
+
+startcheckflag = False # Flag to start the program
+
 def start_program(_):
     global startcheckflag
     keyboard.write('\b')
     startcheckflag = True
     
 def clear_screen():
-    #clears the screen
+    # Clears the screen
     if os.name == 'nt':  # Windows
         os.system('cls')
     else:  
         os.system('clear')
 
-keyboard.on_press_key('1', start_program) #if user presses 1,program starts 
+keyboard.on_press_key('1', start_program) # If user presses 1,program starts 
 
 while not startcheckflag:
     time.sleep(0.1)
+
 clear_screen()
 
 def fetch_mic_info(): 
@@ -75,16 +81,12 @@ def main():
     # Fetch info about default input device (mic)
     default_sample_rate, default_channels = fetch_mic_info()
 
-    # TEST
+    
     print("===================================================================")
     print(f"default sample rate: {int(default_sample_rate)}")
     print(f"default channel number: {default_channels}")
     print("===================================================================\n\n")
     
-    # TEST END
-
-    
-
     SAMPLE_RATE = int(default_sample_rate)
     FORMAT = pyaudio.paInt16 # Bit-depth ## paInt16 => 16-bit PCM (Pulse Code Modulation)
     CHANNELS = default_channels
