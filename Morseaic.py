@@ -77,7 +77,61 @@ def stop_recording():
             print("****** Stopping the recording... ******\n\n")
             recording_flag=False
 
+def pattern_recognition(normalized_audio_data,SAMPLE_RATE,chunk_duration=0.01):
+
+    # Calculate the number of samples per chunk
+    chunk_samples = int(chunk_duration * SAMPLE_RATE)
+
+    # Initialize the start and end indices for the chunks
+    start_idx = 0
+    pattern_counter=0
+    space_counter=0
+    global firstsignalflag
+    firstsignalflag=False
+    # Array to store the pattern of each chunk
+    pattern_array = []
+
+    # Loop through the audio signal in chunks
+    while start_idx < len(normalized_audio_data):
+        
+        end_idx = min(start_idx + chunk_samples, len(normalized_audio_data))  # Ensure end_idx does not exceed the length of the audio data
+        
+        # Extract the current chunk
+        chunk = normalized_audio_data[start_idx:end_idx]
+
+        # Calculate the mean amplitude of the chunk
+        mean_amplitude = np.mean(np.abs(chunk))
+
+        # Convert mean amplitude to dB using librosa
+        mean_amplitude_db = 20 * np.log10(mean_amplitude)
+        mean_amplitude_db = round(mean_amplitude_db,2)
+        
+
+        if mean_amplitude_db >-22:
+             pattern_counter+=1
+             if space_counter>15 and space_counter<=45:
+                 pattern_array.append("type1")
+             if space_counter>45 and space_counter<90:
+                 pattern_array.append("type2")
+             firstsignalflag=True
+             space_counter=0
+        elif firstsignalflag==True and mean_amplitude_db<=-20:
+             space_counter+=1
+             if pattern_counter>3 and pattern_counter<=50:
+                 pattern_array.append('.')
+             elif pattern_counter>50 and pattern_counter<90:
+                 pattern_array.append('-')
+             
+             pattern_counter=0
+
+        # Update the start index for the next chunk
+        start_idx += chunk_samples
+
+    return pattern_array
+
+
 def main():
+    global normalized_audio_data, SAMPLE_RATE
     # Fetch info about default input device (mic)
     default_sample_rate, default_channels = fetch_mic_info()
 
@@ -161,3 +215,5 @@ def main():
 if __name__ == "__main__":
     main() # Run the main function
 
+pattern_array=pattern_recognition(normalized_audio_data,SAMPLE_RATE) #pattern recognition function
+print(pattern_array) #print the pattern array
