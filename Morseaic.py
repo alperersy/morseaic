@@ -135,7 +135,7 @@ def pattern_recognition(normalized_audio_data,SAMPLE_RATE, chunk_duration=0.01):
 
         # Update the start index for the next chunk
         start_idx += chunk_samples
-
+    pattern_array.append("type2")
     return pattern_array
 
 def pattern_transformer(pattern_array, int_morse_table):
@@ -151,16 +151,17 @@ def pattern_transformer(pattern_array, int_morse_table):
 
             output_string.append(int_morse_table["".join(temp_letter_list)])
             output_string.append(" ")
-            
             temp_element_list.clear()
             temp_letter_list.clear()
 
         elif element != "type1" and element != "type2":
             temp_element_list.append(element)
+        
 
+    
 
     translated_string = "".join(output_string)
-
+    
     return translated_string
 
 def main():
@@ -247,12 +248,11 @@ def main():
     # Pattern recognition process
     pattern_array = pattern_recognition(normalized_audio_data, SAMPLE_RATE) 
     
-    # TEST LINES DEL WHEN DONE
-    print(pattern_array) #print the pattern array
-    # TEST LINES END
-
+    print("///////////////////////////////////////////////////////////////////////\n")
     translated_string = pattern_transformer(pattern_array, int_morse_table)
-    print(translated_string)
+    print(f"Translated string: {translated_string}\n")
+    print("///////////////////////////////////////////////////////////////////////\n")
+    
     
 if __name__ == "__main__":
     main() # Run the main function
