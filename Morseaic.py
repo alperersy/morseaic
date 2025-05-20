@@ -21,6 +21,10 @@ with open(file_name, "r") as file:
 
 startcheckflag = False # Flag to start the program
 
+def pre_REC_screen(_):
+    clear_screen()
+    print("When ready, press 'enter' to start recording")
+
 def start_program(_):
     global startcheckflag
     keyboard.write('\b')
@@ -33,7 +37,8 @@ def clear_screen():
     else:  
         os.system('clear')
 
-keyboard.on_press_key('1', start_program) # If user presses 1,program starts 
+hook1 = keyboard.on_press_key('1', pre_REC_screen) # If user presses 1, pre recording screen shows
+hook2 = keyboard.on_press_key('enter', start_program) # Then, if user presses enter, recording starts 
 
 while not startcheckflag:
     time.sleep(0.1)
@@ -73,9 +78,10 @@ def melspect_silence_error(normalized_audio_data, SAMPLE_RATE):
 
 def stop_recording():
         global recording_flag
+
         if recording_flag:        
             print("****** Stopping the recording... ******\n\n")
-            recording_flag=False
+            recording_flag = False
 
 def pattern_recognition(normalized_audio_data,SAMPLE_RATE, chunk_duration=0.01):
 
@@ -184,6 +190,9 @@ def main():
     global silence_error_flag
     silence_error_flag = False
 
+    keyboard.unhook(hook1)
+    keyboard.unhook(hook2)
+
     while 1:
         silence_error_flag = False
         p = pyaudio.PyAudio() # Initialize PortAudio
@@ -196,7 +205,7 @@ def main():
                         input = True,
                         frames_per_buffer = CHUNK)
         print("------------------------------------------------------------------------------")
-        print("--------- Recording has started. Press 'ENTER' to stop the recording ---------\n",end="")
+        print("--------- Recording has started. Press 'BACKSPACE' to stop the recording -----\n",end="")
         print("------------------------------------------------------------------------------\n\n")
         input_audio_frames = [] # Will store the recorded audio data
 
@@ -205,7 +214,7 @@ def main():
 
         # Stop the recording when pressed enter
 
-        keyboard.on_press_key('enter', lambda _: stop_recording())
+        keyboard.on_press_key('backspace', lambda _: stop_recording())
 
         # Reading audio data
         while recording_flag:
@@ -237,6 +246,7 @@ def main():
 
         # Normalize the audio data using librosa
         normalized_audio_data = audio_data.astype(np.float32) / np.max(np.abs(audio_data))
+
         # Process the normalized audio data with librosa for the silence error
         melspect_silence_error(normalized_audio_data, SAMPLE_RATE)
 
