@@ -1,3 +1,6 @@
+# Temporary recording file
+temp_rec_mct.wav
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
