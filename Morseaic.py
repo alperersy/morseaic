@@ -27,6 +27,7 @@ def pre_REC_screen(_):
 
 def start_program(_):
     global startcheckflag
+
     keyboard.write('\b')
     startcheckflag = True
     
@@ -34,6 +35,7 @@ def clear_screen():
     # Clears the screen
     if os.name == 'nt':  # Windows
         os.system('cls')
+
     else:  
         os.system('clear')
 
@@ -45,7 +47,8 @@ while not startcheckflag:
 
 clear_screen()
 
-def fetch_mic_info(): 
+def fetch_mic_info():
+
     # Fetch info about default input device (mic)
     p = pyaudio.PyAudio()
     default_input_device_info = p.get_default_input_device_info()
@@ -59,6 +62,7 @@ def fetch_mic_info():
     return default_sample_rate, default_channels
 
 def melspect_silence_error(normalized_audio_data, SAMPLE_RATE):
+
     # Process the normalized audio data with librosa
     mel_spect = librosa.feature.melspectrogram(y=normalized_audio_data, sr=SAMPLE_RATE)
 
@@ -77,11 +81,12 @@ def melspect_silence_error(normalized_audio_data, SAMPLE_RATE):
             
 
 def stop_recording():
-        global recording_flag
+        
+    global recording_flag
 
-        if recording_flag:        
-            print("****** Stopping the recording... ******\n\n")
-            recording_flag = False
+    if recording_flag:        
+        print("****** Stopping the recording... ******\n\n")
+        recording_flag = False
 
 def pattern_recognition(normalized_audio_data,SAMPLE_RATE, chunk_duration=0.01):
 
@@ -142,6 +147,7 @@ def pattern_recognition(normalized_audio_data,SAMPLE_RATE, chunk_duration=0.01):
         # Update the start index for the next chunk
         start_idx += chunk_samples
     pattern_array.append("type2")
+
     return pattern_array
 
 def pattern_transformer(pattern_array, int_morse_table):
@@ -154,24 +160,28 @@ def pattern_transformer(pattern_array, int_morse_table):
 
         if element == "type2":
             temp_letter_list.append("".join(temp_element_list))
-
-            output_string.append(int_morse_table["".join(temp_letter_list)])
-            output_string.append(" ")
-            temp_element_list.clear()
-            temp_letter_list.clear()
+            
+            try:
+                ch = int_morse_table["".join(temp_letter_list)]
+                output_string.append(ch)
+                output_string.append(" ")
+                temp_element_list.clear()
+                temp_letter_list.clear()
+                                     
+            except KeyError:
+                print("WARNING - PROBABLY SOME MESSAGE COULDNT TRANSLATED!")
+                break
 
         elif element != "type1" and element != "type2":
             temp_element_list.append(element)
         
-
-    
-
     translated_string = "".join(output_string)
     
     return translated_string
 
 def main():
     global normalized_audio_data, SAMPLE_RATE
+
     # Fetch info about default input device (mic)
     default_sample_rate, default_channels = fetch_mic_info()
 
@@ -204,9 +214,11 @@ def main():
                         rate = SAMPLE_RATE,
                         input = True,
                         frames_per_buffer = CHUNK)
+        
         print("------------------------------------------------------------------------------")
         print("--------- Recording has started. Press 'BACKSPACE' to stop the recording -----\n",end="")
         print("------------------------------------------------------------------------------\n\n")
+
         input_audio_frames = [] # Will store the recorded audio data
 
         global recording_flag
@@ -259,11 +271,12 @@ def main():
     pattern_array = pattern_recognition(normalized_audio_data, SAMPLE_RATE) 
     
     print("///////////////////////////////////////////////////////////////////////\n")
+
     translated_string = pattern_transformer(pattern_array, int_morse_table)
     print(f"Translated string: {translated_string}\n")
+
     print("///////////////////////////////////////////////////////////////////////\n")
     
     
 if __name__ == "__main__":
     main() # Run the main function
-
