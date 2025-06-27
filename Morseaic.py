@@ -179,6 +179,17 @@ def pattern_transformer(pattern_array, int_morse_table):
     
     return translated_string
 
+def clear_input_buffer():
+    if os.name == 'nt': # Windows
+        import msvcrt
+
+        while msvcrt.kbhit():
+            msvcrt.getch()
+
+    else:
+        import sys, termios
+        termios.tcflush(sys.stdin, termios.TCIOFLUSH)
+
 def main():
     global normalized_audio_data, SAMPLE_RATE
 
@@ -277,6 +288,7 @@ def main():
 
     print("///////////////////////////////////////////////////////////////////////\n")
     
+    clear_input_buffer() # Clear input buffer
     
 if __name__ == "__main__":
     main() # Run the main function
